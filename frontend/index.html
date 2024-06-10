@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bacchus Auction</title>
+</head>
+<body>
+    <h1>Bacchus Auction</h1>
+    <div id="auctions"></div>
+    <h2>Place a Bid</h2>
+    <form id="bidForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br><br>
+        <label for="surname">Surname:</label>
+        <input type="text" id="surname" name="surname" required><br><br>
+        <label for="auctionID">Auction ID:</label>
+        <input type="text" id="auctionID" name="auctionID" required><br><br>
+        <label for="auctionName">Auction Name:</label>
+        <input type="text" id="auctionName" name="auctionName" required><br><br>
+        <label for="amount">Amount (€):</label>
+        <input type="number" id="amount" name="amount" required><br><br>
+        <button type="submit">Submit Bid</button>
+    </form>
+
+    <script>
+        async function fetchAuctions() {
+            try {
+                const response = await fetch('http://localhost:8081/auctions');
+                const auctions = await response.json();
+                displayAuctions(auctions);
+            } catch (error) {
+                console.error('Error fetching auctions:', error);
+            }
+        }
+
+        function displayAuctions(auctions) {
+            const auctionsDiv = document.getElementById('auctions');
+            auctionsDiv.innerHTML = '';
+            auctions.forEach(auction => {
+                const auctionDiv = document.createElement('div');
+                auctionDiv.innerHTML = `
+                    <h3>${auction.productName}</h3>
+                    <p>${auction.productDescription}</p>
+                    <p>Ends at: ${new Date(auction.biddingEndDate).toLocaleString()}</p>
+                    <p>Auction ID: ${auction.productId}</p>
+                `;
+                auctionsDiv.appendChild(auctionDiv);
+            });
+        }
+
+        document.getElementById('bidForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const surname = document.getElementById('surname').value;
+            const auctionID = document.getElementById('auctionID').value;
+            const auctionName = document.getElementById('auctionName').value;
+            const amount = document.getElementById('amount').value;
+
+            const bidData = {
+                name,
+                surname,
+                auctionID,
+                auctionName,
+                amount
+            };
+
+            try {
+                const response = await fetch('http://localhost:8081/makebid', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(bidData)
+                });
+
+                if (response.ok) {
+                    alert('Bid submitted successfully!');
+                } else {
+                    alert('Error submitting bid.');
+                }
+            } catch (error) {
+                console.error('Error submitting bid:', error);
+                alert('Error submitting bid.');
+            }
+        });
+
+        fetchAuctions();
+    </script>
+</body>
+</html>
